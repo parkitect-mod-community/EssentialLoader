@@ -1,0 +1,21 @@
+{
+  "name": "Template",
+  "folder": "Template",
+  "version": "v0.0.0",
+  "workshop": "",
+  "author": "Michael Pollind",
+  "description": null,
+  "preview": "./preview.png",
+  "assemblies": [
+    "System",
+    "System.Core",
+    "System.Data",
+    "UnityEngine",
+    "UnityEngine.AssetBundleModule",
+    "UnityEngine.CoreModule",
+    "Parkitect",
+    "UnityEngine.PhysicsModule"
+  ],
+  "assets": [
+  ]
+}
