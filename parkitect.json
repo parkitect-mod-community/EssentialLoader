@@ -2,7 +2,7 @@
     "name": "ShopLoader",
     "folder": "PMC@ShopLoader",
     "version": "v0.0.0",
-    "workshop": "",
+    "workshop": "2115963093",
     "author": "Michael Pollind",
     "description": null,
     "preview": "./preview.png",
@@ -15,12 +15,10 @@
         "UnityEngine.CoreModule",
         "Parkitect",
         "UnityEngine.PhysicsModule",
-        "UnityEngine.JSONSerializeModule",
-        "0Harmony"
+        "UnityEngine.JSONSerializeModule"
     ],
     "assets": [
     ],
     "Include": [
-        "./packages/Lib.Harmony.*/lib/net35/*.dll"
     ]
 }

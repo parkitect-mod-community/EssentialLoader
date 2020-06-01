@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using HarmonyLib;
+using UnityEngine;
 
 namespace PMC.Shop
 {
@@ -27,8 +27,8 @@ namespace PMC.Shop
 
         public ShopLoaderMain()
         {
-            Harmony harmony = new Harmony("PMC.Shop");
-            harmony.PatchAll();
+            // Harmony harmony = new Harmony("PMC.Shop");
+            // harmony.PatchAll();
         }
 
         public void onEnabled()
@@ -48,7 +48,7 @@ namespace PMC.Shop
                         string[] files = Directory.GetFiles(modEntry.path, "*.assetProject", SearchOption.TopDirectoryOnly);
                         if (files.Length != 0)
                         {
-                            ShopLoader loader = new ShopLoader(modEntry.path);
+                            ShopLoader loader = new ShopLoader(files[0]);
                             ShopLoaders.Add(mod.Identifier,loader);
                             loader.EnableShop();
                         }
@@ -57,33 +57,33 @@ namespace PMC.Shop
             }
 
         }
-
-        [HarmonyPatch(typeof(IMod))]
-        class ModManagerPatch01
-        {
-            [HarmonyPostfix]
-            [HarmonyPatch(nameof(IMod.onDisabled))]
-            public static void onDisablePostfix(IMod __instance)
-            {
-                if (ShopLoaders.ContainsKey(__instance.Identifier))
-                {
-                    if(ShopLoaders[__instance.Identifier].IsLoaded)
-                        ShopLoaders[__instance.Identifier].DisableShop();
-
-                }
-            }
-
-            [HarmonyPostfix]
-            [HarmonyPatch(nameof(IMod.onEnabled))]
-            public static void onEnablePostfix(IMod __instance)
-            {
-                if (ShopLoaders.ContainsKey(__instance.Identifier))
-                {
-                    if(!ShopLoaders[__instance.Identifier].IsLoaded)
-                        ShopLoaders[__instance.Identifier].DisableShop();
-                }
-            }
-        }
+        //
+        // [HarmonyPatch(typeof(IMod))]
+        // class ModManagerPatch01
+        // {
+        //     [HarmonyPostfix]
+        //     [HarmonyPatch(nameof(IMod.onDisabled))]
+        //     public static void onDisablePostfix(IMod __instance)
+        //     {
+        //         if (ShopLoaders.ContainsKey(__instance.Identifier))
+        //         {
+        //             if(ShopLoaders[__instance.Identifier].IsLoaded)
+        //                 ShopLoaders[__instance.Identifier].DisableShop();
+        //
+        //         }
+        //     }
+        //
+        //     [HarmonyPostfix]
+        //     [HarmonyPatch(nameof(IMod.onEnabled))]
+        //     public static void onEnablePostfix(IMod __instance)
+        //     {
+        //         if (ShopLoaders.ContainsKey(__instance.Identifier))
+        //         {
+        //             if(!ShopLoaders[__instance.Identifier].IsLoaded)
+        //                 ShopLoaders[__instance.Identifier].DisableShop();
+        //         }
+        //     }
+        // }
 
         public void onDisabled()
         {

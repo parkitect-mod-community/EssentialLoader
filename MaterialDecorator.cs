@@ -50,21 +50,7 @@ namespace PMC.Shop
             }
         }
 
-        public void Decorate(GameObject assetGO, Asset asset, AssetBundle assetBundle)
-        {
-            if (asset.Type == AssetType.Fence)
-            {
-                Fence component = assetGO.GetComponent<Fence>();
-                this.replaceMaterials(component.flatGO, asset);
-                if (!((Object) component.postGO != (Object) null))
-                    return;
-                this.replaceMaterials(component.postGO, asset);
-            }
-            else
-                this.replaceMaterials(assetGO, asset);
-        }
-
-        private void replaceMaterials(GameObject go, Asset asset)
+        public void replaceMaterials(GameObject go)
         {
             foreach (Renderer componentsInChild in go.GetComponentsInChildren<Renderer>())
             {

@@ -1,18 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using Parkitect.Mods.AssetPacks;
+using MiniJSON;
 using UnityEngine;
+using Object = System.Object;
 
 namespace PMC.Shop
 {
+    public enum Temperature { NONE, COLD, HOT }
+    public enum HandSide { LEFT, RIGHT }
+    public enum ConsumeAnimation { GENERIC, DRINK_STRAW, LICK, WITH_HANDS }
+    public enum ProductType { ON_GOING, CONSUMABLE, WEARABLE }
+    public enum Seasonal { WINTER, SPRING, SUMMER, AUTUMN, NONE }
+    public enum Body { HEAD, FACE, BACK }
+    public enum EffectTypes { HUNGER, THIRST, HAPPINESS, TIREDNESS, SUGARBOOST }
+
+
     public class ShopLoader
     {
         public String Path { get; private set; }
         public bool IsLoaded { get; private set; }
 
-        private AssetPack _assetPack;
+        // private AssetPack _assetPack;
         private AssetBundle _bundle;
         private List<UnityEngine.Object> _assetObjects = new List<UnityEngine.Object>();
         private GameObject _hider;
@@ -20,14 +29,32 @@ namespace PMC.Shop
         public ShopLoader(String path)
         {
             Path = path;
-            _assetPack = JsonUtility.FromJson<AssetPack>(File.ReadAllText(path));
+            // _assetPack = JsonUtility.FromJson<AssetPack>(File.ReadAllText(Path));
+        }
+
+        private T _tryGet<T>(Object obj, T defaultV)
+        {
+            if(obj.GetType() == typeof(T))
+                return defaultV;
+            return (T) obj;
+        }
+
+        private T _tryGet<T>(Dictionary<string,object> obj, string key, T defaultV)
+        {
+            if (obj.ContainsKey(key))
+                return defaultV;
+            return _tryGet<T>(obj[key], defaultV);
         }
 
         public void EnableShop()
         {
+            var dict = Json.Deserialize(File.ReadAllText(Path)) as Dictionary<string,Object>;
             if (GameController.Instance != null && GameController.Instance.isCampaignScenario)
                 return;
-            Debug.Log("Loading asset pack " + _assetPack.Name + " with " + _assetPack.Assets.Count + " assets");
+            if(dict == null)
+                return;
+
+            Debug.Log("Loading asset pack for shop " + dict["Name"] + " with " + ((List<object>) dict["Assets"]).Count + " assets");
             _bundle = AssetBundle.LoadFromFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.Path),
                 "assetPack"));
             if (_bundle == null)
@@ -36,105 +63,126 @@ namespace PMC.Shop
             UnityEngine.Object.DontDestroyOnLoad(_hider);
 
             IsLoaded = true;
-            foreach (var asset in _assetPack.Assets)
+            foreach (var asset in dict["Assets"] as List<object>)
             {
-                if (asset.Type == AssetType.Shop)
+                try
                 {
-                    GameObject go = UnityEngine.Object.Instantiate<GameObject>(
-                        _bundle.LoadAsset<GameObject>(string.Format("Assets/Resources/AssetPack/{0}.prefab",
-                            (object) asset.Guid)));
+                    var aa = asset as Dictionary<string, Object>;
 
-                    ProductShop productShop = go.AddComponent<ProductShop>();
-                    var products = new List<Product>();
-                    foreach (var decoratorProduct in asset.Products)
+                    if ((AssetType)(int)(Int64)aa["Type"] ==  AssetType.Shop)
                     {
-                        GameObject productGo = UnityEngine.Object.Instantiate<GameObject>(
+                        Debug.Log("loading shop:" + (string)aa["Name"]);
+                        GameObject go = UnityEngine.Object.Instantiate<GameObject>(
                             _bundle.LoadAsset<GameObject>(string.Format("Assets/Resources/AssetPack/{0}.prefab",
-                                (object) decoratorProduct.Guid)));
-                        productGo.name = decoratorProduct.Guid;
-                        Product product = null;
-                        switch (decoratorProduct.ProductType)
+                                (string) aa["Guid"])));
+
+                        ProductShop productShop = go.AddComponent<ProductShop>();
+                        var products = new List<Product>();
+                        foreach (var decoratorProduct in aa["Products"] as List<object>)
                         {
-                            case ProductType.ON_GOING:
-                                product = _toOngoingProduct(productGo, decoratorProduct);
-                                break;
-                            case ProductType.WEARABLE:
-                                product = _toWearableProduct(productGo, decoratorProduct);
-                                break;
-                            case ProductType.CONSUMABLE:
-                                product = _bindConsumableProduct(productGo, decoratorProduct);
-                                break;
-                            default:
-                                Debug.Log("Failed to Load Product: " + decoratorProduct.Name);
-                                break;
-                        }
-
-                        if (product != null)
-                        {
-
-                            BindingFlags flags = BindingFlags.GetField | BindingFlags.Instance | BindingFlags.NonPublic;
-                            typeof(Product).GetField("displayName", flags).SetValue(product, decoratorProduct.Name);
-
-                            switch (decoratorProduct.HandSide)
+                            var bb = (Dictionary<string, Object>)decoratorProduct;
+                            GameObject productGo = UnityEngine.Object.Instantiate<GameObject>(
+                                _bundle.LoadAsset<GameObject>(string.Format("Assets/Resources/AssetPack/{0}.prefab",
+                                    (string) bb["Guid"])));
+                            productGo.name = (string) bb["Guid"];
+                            Product product = null;
+                            switch ((ProductType)(int)(Int64)bb["ProductType"])
                             {
-                                case HandSide.LEFT:
-                                    product.handSide = Hand.Side.LEFT;
+                                case ProductType.ON_GOING:
+                                    product = _toOngoingProduct(productGo, bb);
                                     break;
-                                case HandSide.RIGHT:
-                                    product.handSide = Hand.Side.RIGHT;
+                                case ProductType.WEARABLE:
+                                    product = _toWearableProduct(productGo, bb);
+                                    break;
+                                case ProductType.CONSUMABLE:
+                                    product = _bindConsumableProduct(productGo, bb);
+                                    break;
+                                default:
+                                    Debug.Log("Failed to Load Product: " + bb["Name"]);
                                     break;
                             }
 
-                            product.isTwoHanded = decoratorProduct.IsTwoHanded;
-                            product.interestingToLookAt = decoratorProduct.IsInterestingToLookAt;
-                            product.defaultPrice = decoratorProduct.Price;
-
-                            if (decoratorProduct.Ingredients != null)
+                            if (product != null)
                             {
-                                List<Ingredient> ingredients = new List<Ingredient>();
 
-                                foreach (var decoratorIngredient in decoratorProduct.Ingredients)
+
+                                // Debug.Log("b5" + product + bb["Name"]);
+                                // BindingFlags flags = BindingFlags.GetField | BindingFlags.Instance | BindingFlags.NonPublic;
+                                // typeof(Product).GetField("displayName", flags).SetValue(product, (string) bb["Name"]);
+
+                                switch ((HandSide)(int)(Int64)bb["HandSide"])
                                 {
-                                    ingredients.Add(_toIngredient(decoratorIngredient));
+                                    case HandSide.LEFT:
+                                        product.handSide = Hand.Side.LEFT;
+                                        break;
+                                    case HandSide.RIGHT:
+                                        product.handSide = Hand.Side.RIGHT;
+                                        break;
                                 }
 
-                                product.ingredients = ingredients.ToArray();
-                                product.boughtFrom = productShop;
+                                product.isTwoHanded = (bool) bb["IsTwoHanded"];
+                                product.interestingToLookAt = (bool) bb["IsInterestingToLookAt"];
+                                product.defaultPrice = (float) (double) bb["Price"];
+
+                                if (bb["Ingredients"] != null)
+                                {
+                                    List<Ingredient> ingredients = new List<Ingredient>();
+
+                                    foreach (var decoratorIngredient in bb["Ingredients"] as List<object>)
+                                    {
+                                        ingredients.Add(
+                                            _toIngredient((Dictionary<string, Object>)decoratorIngredient));
+                                    }
+
+                                    product.ingredients = ingredients.ToArray();
+                                    product.boughtFrom = productShop;
+                                }
+                                _registerGameObject(bb, productGo);
+
+                                products.Add(product);
                             }
-
-                            products.Add(product);
                         }
-                    }
 
-                    productShop.products = products.ToArray();
-                    go.name = asset.Guid;
-                    new MaterialDecorator().Decorate(go, asset, _bundle);
-                    _setupBounds(go, asset, _bundle);
-                    _registerGameObject(asset, go);
+                        productShop.products = products.ToArray();
+                        go.name = (string) aa["Guid"];
+                        new MaterialDecorator().replaceMaterials(go);
+                        _setupBounds(go, aa, _bundle);
+                        _registerGameObject(aa, go);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError((object) ex);
                 }
             }
+
 
             _hider.SetActive(false);
             _bundle.Unload(false);
         }
 
-        private void _setupBounds(GameObject assetGO, Asset asset, AssetBundle assetBundle)
+        private void _setupBounds(GameObject assetGO, Dictionary<string,Object> asset, AssetBundle assetBundle)
         {
-            if (asset.BoundingBoxes == null || asset.BoundingBoxes.Count <= 0)
+            if (asset["BoundingBoxes"] == null || ((List<object>) asset["BoundingBoxes"]).Count <= 0)
                 return;
-            foreach (BoundingBox boundingBox1 in asset.BoundingBoxes)
+            foreach (var boundingBox1 in asset["BoundingBoxes"] as List<object>)
             {
+                var temp = boundingBox1 as Dictionary<string, Object>;
+
                 global::BoundingBox boundingBox2 = assetGO.AddComponent<global::BoundingBox>();
                 Bounds bounds = new Bounds();
-                Vector3 min = new Vector3(boundingBox1.BoundsMin[0], boundingBox1.BoundsMin[1], boundingBox1.BoundsMin[2]);
-                Vector3 max = new Vector3(boundingBox1.BoundsMax[0], boundingBox1.BoundsMax[1], boundingBox1.BoundsMax[2]);
+                List<object> bmin = temp["BoundsMin"] as List<object>;
+                List<object> bmax = temp["BoundsMax"] as List<object>;
+
+                Vector3 min = new Vector3((float) (double)bmin[0], (float) (double)bmin[1], (float) (double)bmin[2]);
+                Vector3 max = new Vector3((float) (double)bmax[0], (float) (double)bmax[1], (float) (double)bmax[2]);
                 bounds.SetMinMax(min, max);
                 boundingBox2.setBounds(bounds);
                 boundingBox2.layers = BoundingVolume.Layers.Buildvolume;
             }
         }
 
-        private void _registerGameObject(Asset asset, UnityEngine.Object assetObject)
+        private void _registerGameObject(Dictionary<string,Object> asset, UnityEngine.Object assetObject)
         {
             UnityEngine.Object.DontDestroyOnLoad(assetObject);
             if (assetObject is GameObject)
@@ -145,11 +193,12 @@ namespace PMC.Shop
                 component.isPreview = true;
                 ScriptableSingleton<AssetManager>.Instance.registerObject((UnityEngine.Object) component);
                 this._assetObjects.Add((UnityEngine.Object) component);
+
                 BuildableObject buildableObject = component as BuildableObject;
-                if ((UnityEngine.Object) buildableObject != (UnityEngine.Object) null)
+                if (buildableObject != null)
                 {
-                    buildableObject.setDisplayName(asset.Name);
-                    buildableObject.price = asset.Price;
+                    buildableObject.setDisplayName((string) asset["Name"]);
+                    buildableObject.price = (float) (double)asset["Price"];
                     buildableObject.canBeRefunded = false;
                     buildableObject.isStatic = true;
                 }
@@ -164,16 +213,17 @@ namespace PMC.Shop
             }
         }
 
-        private Ingredient _toIngredient(ShopIngredient ingredient)
+        private Ingredient _toIngredient(Dictionary<string,Object> ingredient)
         {
             Ingredient result = new Ingredient();
             var resource = ScriptableObject.CreateInstance<Resource>();
 
             List<ConsumableEffect> consumableEffects = new List<ConsumableEffect>();
-            foreach (var decIngredient in ingredient.Effects)
+            foreach (var decIngredient in (List<object>) ingredient["Effects"])
             {
+                var temp = (Dictionary<string, Object>)decIngredient;
                 var ef = new ConsumableEffect();
-                switch (decIngredient.Type)
+                switch ((EffectTypes)(int)(Int64)temp["Type"])
                 {
                     case EffectTypes.HUNGER:
                         ef.affectedStat = ConsumableEffect.AffectedStat.HUNGER;
@@ -192,35 +242,35 @@ namespace PMC.Shop
                         break;
                 }
 
-                ef.amount = decIngredient.Amount;
+                ef.amount = (float)(double)temp["Amount"];
                 consumableEffects.Add(ef);
             }
 
             resource.effects = consumableEffects.ToArray();
-            resource.setDisplayName(ingredient.Name);
-            resource.setCosts(ingredient.Price);
+            resource.setDisplayName((string) ingredient["Name"]);
+            resource.setCosts((float)(double)ingredient["Price"]);
             //TODO: resource texture
             // resource.resourceTexture
 
             result.resource = resource;
-            result.tweakable = ingredient.Tweakable;
-            result.defaultAmount = ingredient.Amount;
+            result.tweakable = (bool) ingredient["Tweakable"];
+            result.defaultAmount = (float)(double) ingredient["Amount"];
             return result;
         }
 
-        private Product _toOngoingProduct(GameObject go, ShopProduct pr)
+        private Product _toOngoingProduct(GameObject go, Dictionary<string,Object> pr)
         {
             OngoingEffectProduct result = go.AddComponent<OngoingEffectProduct>();
-            result.duration = pr.Duration;
-            result.destroyWhenDepleted = pr.DestroyWhenDepleted;
-            result.removeFromInventoryWhenDepleted = pr.RemoveWhenDepleted;
+            result.duration = (int)(Int64) pr["Duration"];
+            result.destroyWhenDepleted = (bool) pr["DestroyWhenDepleted"];
+            result.removeFromInventoryWhenDepleted = (bool) pr["RemoveWhenDepleted"];
             return result;
         }
 
-        private Product _toWearableProduct(GameObject go, ShopProduct pr)
+        private Product _toWearableProduct(GameObject go, Dictionary<string,Object> pr)
         {
             WearableProduct result = go.AddComponent<WearableProduct>();
-            switch (pr.BodyLocation)
+            switch ((Body)(int)(Int64)pr["BodyLocation"])
             {
                 case Body.HEAD:
                     result.bodyLocation = WearableProduct.BodyLocation.HEAD;
@@ -233,7 +283,7 @@ namespace PMC.Shop
                     break;
             }
 
-            switch (pr.SeasonalPreference)
+            switch ((Seasonal)(int)(Int64)pr["SeasonalPreference"])
             {
                 case Seasonal.NONE:
                     result.seasonalPreference = WearableProduct.SeasonalPreference.NONE;
@@ -252,7 +302,7 @@ namespace PMC.Shop
                     break;
             }
 
-            switch (pr.TemperaturePreference)
+            switch ((Temperature)(int)(Int64)pr["TemperaturePreference"])
             {
                 case Temperature.HOT:
                     result.temperaturePreference = TemperaturePreference.HOT;
@@ -265,17 +315,17 @@ namespace PMC.Shop
                     break;
             }
 
-            result.dontHideHair = !pr.HideHair;
-            result.hideOnRides = pr.HideOnRide;
+            result.dontHideHair = !(bool)pr["HideHair"];
+            result.hideOnRides = (bool) pr["HideOnRide"];
 
             return result;
         }
 
 
-        private Product _bindConsumableProduct(GameObject go, ShopProduct pr)
+        private Product _bindConsumableProduct(GameObject go, Dictionary<string,Object> pr)
         {
             ConsumableProduct result = go.AddComponent<ConsumableProduct>();
-            switch (pr.ConsumeAnimation)
+            switch ((ConsumeAnimation)(int)(Int64)pr["ConsumeAnimation"])
             {
                 case ConsumeAnimation.LICK:
                     result.consumeAnimation = ConsumableProduct.ConsumeAnimation.LICK;
@@ -291,7 +341,7 @@ namespace PMC.Shop
                     break;
             }
 
-            switch (pr.Temprature)
+            switch ((Temperature)(int)(Int64)pr["Temprature"])
             {
                 case Temperature.HOT:
                     result.temperaturePreference = TemperaturePreference.HOT;
@@ -304,7 +354,7 @@ namespace PMC.Shop
                     break;
             }
 
-            result.portions = pr.Portions;
+            result.portions = (int)(Int64) pr["Portions"];
 
             return result;
         }
