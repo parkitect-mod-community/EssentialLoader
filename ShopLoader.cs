@@ -77,6 +77,8 @@ namespace PMC.Shop
                                 (string) aa["Guid"])));
 
                         ProductShop productShop = go.AddComponent<ProductShop>();
+                        productShop.walkableFlag = Block.WalkableFlagType.FORWARD;
+
                         var products = new List<Product>();
                         foreach (var decoratorProduct in aa["Products"] as List<object>)
                         {
@@ -104,12 +106,6 @@ namespace PMC.Shop
 
                             if (product != null)
                             {
-
-
-                                // Debug.Log("b5" + product + bb["Name"]);
-                                // BindingFlags flags = BindingFlags.GetField | BindingFlags.Instance | BindingFlags.NonPublic;
-                                // typeof(Product).GetField("displayName", flags).SetValue(product, (string) bb["Name"]);
-
                                 switch ((HandSide)(int)(Int64)bb["HandSide"])
                                 {
                                     case HandSide.LEFT:
@@ -118,6 +114,7 @@ namespace PMC.Shop
                                     case HandSide.RIGHT:
                                         product.handSide = Hand.Side.RIGHT;
                                         break;
+
                                 }
 
                                 product.isTwoHanded = (bool) bb["IsTwoHanded"];
@@ -135,7 +132,6 @@ namespace PMC.Shop
                                     }
 
                                     product.ingredients = ingredients.ToArray();
-                                    product.boughtFrom = productShop;
                                 }
                                 _registerGameObject(bb, productGo);
 
