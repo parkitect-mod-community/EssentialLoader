@@ -213,6 +213,7 @@ namespace PMC.Shop
         {
             Ingredient result = new Ingredient();
             var resource = ScriptableObject.CreateInstance<Resource>();
+            _registerGameObject(ingredient, resource);
 
             List<ConsumableEffect> consumableEffects = new List<ConsumableEffect>();
             foreach (var decIngredient in (List<object>) ingredient["Effects"])
