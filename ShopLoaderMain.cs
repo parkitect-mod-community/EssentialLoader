@@ -37,7 +37,7 @@ namespace PMC.Shop
             foreach (var modEntry in ModManager.Instance.getModEntries())
             {
                 IMod mod = modEntry.mod;
-                if (modEntry.isEnabled)
+                if (modEntry.isEnabled || modEntry.isActive())
                 {
                     if (ShopLoaders.ContainsKey(mod.Identifier))
                     {
@@ -45,17 +45,18 @@ namespace PMC.Shop
                     }
                     else
                     {
-                        string[] files = Directory.GetFiles(modEntry.path, "*.assetProject", SearchOption.TopDirectoryOnly);
+                        string[] files = Directory.GetFiles(modEntry.path, "*.assetProject",
+                            SearchOption.TopDirectoryOnly);
                         if (files.Length != 0)
                         {
                             ShopLoader loader = new ShopLoader(files[0]);
-                            ShopLoaders.Add(mod.Identifier,loader);
+                            ShopLoaders.Add(mod.Identifier, loader);
                             loader.EnableShop();
                         }
                     }
                 }
-            }
 
+            }
         }
         //
         // [HarmonyPatch(typeof(IMod))]
