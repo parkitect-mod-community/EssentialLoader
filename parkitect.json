@@ -1,8 +1,8 @@
 {
-    "name": "ShopLoader",
-    "folder": "PMC@ShopLoader",
+    "name": "PMC.ExtendedLoader",
+    "folder": "PMCExtenedLoader",
     "version": "v0.0.0",
-    "workshop": "2115963093",
+    "workshop": "2144882834",
     "author": "Michael Pollind",
     "description": null,
     "preview": "./preview.png",
@@ -17,8 +17,18 @@
         "UnityEngine.PhysicsModule",
         "UnityEngine.JSONSerializeModule"
     ],
+    "additionalAssemblies": [
+        "Newtonsoft.Json",
+        "0Harmony"
+    ],
+    "sources": [
+     "./src/*.cs",
+     "./src/**/*.cs"
+    ],
     "assets": [
     ],
     "Include": [
+        "./src/**/*.dll",
+        "./packages/Lib.Harmony.*/lib/net35/*.dll"
     ]
 }

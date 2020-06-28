@@ -1,0 +1,18 @@
+ManifestFileVersion: 0
+CRC: 3471940019
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 00e0c4ea4a65d1e734facd6b038ea7a7
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 27295f96fcdc2b917bd061e8817c7e02
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+Assets:
+- Assets/Resources/AssetPack/484ab850a963651ad8eaacbc222d0384.prefab
+Dependencies: []
