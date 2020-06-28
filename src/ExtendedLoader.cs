@@ -64,6 +64,7 @@ namespace PMC.ExtendedLoader
                             var builder = Parkitility.CreateProductShop<ProductShop>(go)
                                 .DisplayName(asset.Name)
                                 .Id(asset.Guid)
+                                .Price(asset.Price)
                                 .WalkableFlag(Block.WalkableFlagType.FORWARD);
 
                             foreach (var box in AssetPackUtilities.ConvertBoundingBox(asset.BoundingBoxes.ToArray()))
