@@ -15,6 +15,7 @@ namespace PMC.ExtendedLoader
         private readonly AssetManagerLoader _assetManagerLoader = new AssetManagerLoader();
 
         private AssetBundle _bundle;
+
         public ExtendedLoader(String path)
         {
             Path = path;
@@ -53,12 +54,12 @@ namespace PMC.ExtendedLoader
             {
                 try
                 {
-
+                    Debug.Log("Loading Item " + asset.Name + " by type " + asset.TargetType);
                     switch (asset.TargetType)
                     {
                         case AssetType.Shop:
                             GameObject go = AssetPackUtilities.LoadAsset<GameObject>(_bundle, asset.Guid);
-                            if(go == null)
+                            if (go == null)
                                 throw new Exception("Can't find gameobject:" + asset.Guid);
 
                             var builder = Parkitility.CreateProductShop<ProductShop>(go)
@@ -77,9 +78,10 @@ namespace PMC.ExtendedLoader
                                 GameObject productGo = AssetPackUtilities.LoadAsset<GameObject>(_bundle, product.Guid);
                                 if (productGo == null)
                                 {
-                                    Debug.Log("Can't find product game object for:" + product.Name );
+                                    Debug.Log("Can't find product game object for:" + product.Name);
                                     continue;
                                 }
+
                                 switch (product.ProductType)
                                 {
                                     case ProductType.ON_GOING:
@@ -169,6 +171,7 @@ namespace PMC.ExtendedLoader
                     Debug.LogError(ex);
                 }
             }
+
             _bundle.Unload(false);
         }
 

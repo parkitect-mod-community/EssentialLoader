@@ -59,7 +59,8 @@ namespace PMC.ExtendedLoader
             public static void onDisablePostfix(ModManager.ModEntry __instance, ref bool __result)
             {
 
-                Debug.Log("Trying to Disable");
+
+                Debug.Log("Extended loader/ Disabling:" + __instance.mod.Identifier);
 
                 if (ExtenedLoader.ContainsKey(__instance.mod.Identifier) && ExtenedLoader[__instance.mod.Identifier].IsLoaded)
                     ExtenedLoader[__instance.mod.Identifier].onDisabled();
@@ -82,7 +83,7 @@ namespace PMC.ExtendedLoader
                         }
                     }
 
-                    Debug.Log("Trying to Enable");
+                    Debug.Log("Extended loader/ Loading:" + __instance.mod.Identifier);
                     if (ExtenedLoader.ContainsKey(__instance.mod.Identifier))
                     {
                         try
