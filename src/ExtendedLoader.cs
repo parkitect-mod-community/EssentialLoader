@@ -39,7 +39,124 @@ namespace PMC.ExtendedLoader
             }
         }
 
-        public void onEnabled()
+        private void _loadShop(Asset asset)
+        {
+            GameObject go = AssetPackUtilities.LoadAsset<GameObject>(_bundle, asset.Guid);
+            if (go == null)
+                throw new Exception("Can't find Object:" + asset.Guid);
+
+            var builder = Parkitility.CreateProductShop<ProductShop>(go)
+                .DisplayName(asset.Name)
+                .Id(asset.Guid)
+                .Price(asset.Price)
+                .WalkableFlag(Block.WalkableFlagType.FORWARD);
+
+            foreach (var box in AssetPackUtilities.ConvertBoundingBox(asset.BoundingBoxes.ToArray()))
+            {
+                builder.AddBoundingBox(box);
+            }
+
+            foreach (var product in asset.Products)
+            {
+                GameObject productGo = AssetPackUtilities.LoadAsset<GameObject>(_bundle, product.Guid);
+                if (productGo == null)
+                {
+                    Debug.Log("Can't find product game object for:" + product.Name);
+                    continue;
+                }
+
+                switch (product.ProductType)
+                {
+                    case ProductType.ON_GOING:
+                        var ongoingProductBuilder = Parkitility
+                            .CreateOnGoingProduct<OngoingEffectProduct>(productGo)
+                            .Id(product.Guid)
+                            .DisplayName(product.Name)
+                            .Duration(product.Duration)
+                            .DestroyWhenDepleted(product.DestroyWhenDepleted)
+                            .RemoveFromInventoryWhenDepleted(product.RemoveWhenDepleted)
+                            .TwoHanded(product.IsTwoHanded)
+                            .InterestingToLookAt(product.IsInterestingToLookAt)
+                            .DefaultPrice(product.Price)
+                            .HandSide(ProductShopUtility.ConvertToSide(product.HandSide));
+
+                        foreach (var shopIngredient in product.Ingredients)
+                        {
+                            _bindIngredients(ongoingProductBuilder.AddIngredient(_assetManagerLoader),
+                                product, shopIngredient);
+                        }
+
+                        builder.AddProduct(_assetManagerLoader, ongoingProductBuilder);
+                        break;
+                    case ProductType.WEARABLE:
+                        var wearableProductBuilder = Parkitility
+                            .CreateWearableProduct<WearableProduct>(productGo)
+                            .Id(product.Guid)
+                            .DisplayName(product.Name)
+                            .TwoHanded(product.IsTwoHanded)
+                            .InterestingToLookAt(product.IsInterestingToLookAt)
+                            .DefaultPrice(product.Price)
+                            .HandSide(ProductShopUtility.ConvertToSide(product.HandSide))
+                            .TemperaturePreference(
+                                ProductShopUtility.ConvertTemperaturePreference(
+                                    product.TemperaturePreference))
+                            .SeasonalPreference(
+                                ProductShopUtility.ConvertSeasonalPreference(
+                                    product.SeasonalPreference))
+                            .BodyLocation(ProductShopUtility.ConvertBodyLocation(product.BodyLocation))
+                            .HideHair(product.HideHair)
+                            .HideOnRide(product.HideOnRide);
+
+
+                        foreach (var shopIngredient in product.Ingredients)
+                        {
+                            _bindIngredients(wearableProductBuilder.AddIngredient(_assetManagerLoader),
+                                product, shopIngredient);
+                        }
+
+                        builder.AddProduct(_assetManagerLoader, wearableProductBuilder);
+                        break;
+                    case ProductType.CONSUMABLE:
+                        var consumableBuilder = Parkitility
+                            .CreateConsumableProduct<ConsumableProduct>(productGo)
+                            .Id(product.Guid)
+                            .DisplayName(product.Name)
+                            .TwoHanded(product.IsTwoHanded)
+                            .InterestingToLookAt(product.IsInterestingToLookAt)
+                            .TemperaturePreference(
+                                ProductShopUtility.ConvertTemperaturePreference(
+                                    product.TemperaturePreference))
+                            .ConsumeAnimation(
+                                ProductShopUtility.ConvertConsumeAnimation(product.ConsumeAnimation))
+                            .DefaultPrice(product.Price)
+                            .HandSide(ProductShopUtility.ConvertToSide(product.HandSide));
+
+                        GameObject trashGo = AssetPackUtilities.LoadAsset<GameObject>(_bundle, product.TrashGuid);
+                        if (trashGo != null)
+                        {
+                            consumableBuilder.Trash<Trash>(trashGo, _assetManagerLoader)
+                                .Id(product.TrashGuid)
+                                .Disgust(product.DisgustFactor)
+                                .Volume(product.Volume)
+                                .CanWiggle(product.CanWiggle);
+                        }
+
+                        foreach (var shopIngredient in product.Ingredients)
+                        {
+                            _bindIngredients(consumableBuilder.AddIngredient(_assetManagerLoader),
+                                product,
+                                shopIngredient);
+                        }
+
+                        builder.AddProduct(_assetManagerLoader, consumableBuilder);
+                        break;
+                }
+            }
+
+            builder.Build(_assetManagerLoader);
+        }
+
+        public void OnEnabled()
         {
             _bundle = AssetBundle.LoadFromFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.Path),
                 "assetPack"));
@@ -58,110 +175,7 @@ namespace PMC.ExtendedLoader
                     switch (asset.TargetType)
                     {
                         case AssetType.Shop:
-                            GameObject go = AssetPackUtilities.LoadAsset<GameObject>(_bundle, asset.Guid);
-                            if (go == null)
-                                throw new Exception("Can't find gameobject:" + asset.Guid);
-
-                            var builder = Parkitility.CreateProductShop<ProductShop>(go)
-                                .DisplayName(asset.Name)
-                                .Id(asset.Guid)
-                                .Price(asset.Price)
-                                .WalkableFlag(Block.WalkableFlagType.FORWARD);
-
-                            foreach (var box in AssetPackUtilities.ConvertBoundingBox(asset.BoundingBoxes.ToArray()))
-                            {
-                                builder.AddBoundingBox(box);
-                            }
-
-                            foreach (var product in asset.Products)
-                            {
-                                GameObject productGo = AssetPackUtilities.LoadAsset<GameObject>(_bundle, product.Guid);
-                                if (productGo == null)
-                                {
-                                    Debug.Log("Can't find product game object for:" + product.Name);
-                                    continue;
-                                }
-
-                                switch (product.ProductType)
-                                {
-                                    case ProductType.ON_GOING:
-                                        var ongoingProductBuilder = Parkitility
-                                            .CreateOnGoingProduct<OngoingEffectProduct>(productGo)
-                                            .Id(product.Guid)
-                                            .DisplayName(product.Name)
-                                            .Duration(product.Duration)
-                                            .DestroyWhenDepleted(product.DestroyWhenDepleted)
-                                            .RemoveFromInventoryWhenDepleted(product.RemoveWhenDepleted)
-                                            .TwoHanded(product.IsTwoHanded)
-                                            .InterestingToLookAt(product.IsInterestingToLookAt)
-                                            .DefaultPrice(product.Price)
-                                            .HandSide(ProductShopUtility.ConvertToSide(product.HandSide));
-
-                                        foreach (var shopIngredient in product.Ingredients)
-                                        {
-                                            _bindIngredients(ongoingProductBuilder.AddIngredient(_assetManagerLoader),
-                                                product, shopIngredient);
-                                        }
-
-                                        builder.AddProduct(_assetManagerLoader, ongoingProductBuilder);
-                                        break;
-                                    case ProductType.WEARABLE:
-                                        var wearableProductBuilder = Parkitility
-                                            .CreateWearableProduct<WearableProduct>(productGo)
-                                            .Id(product.Guid)
-                                            .DisplayName(product.Name)
-                                            .TwoHanded(product.IsTwoHanded)
-                                            .InterestingToLookAt(product.IsInterestingToLookAt)
-                                            .DefaultPrice(product.Price)
-                                            .HandSide(ProductShopUtility.ConvertToSide(product.HandSide))
-                                            .TemperaturePreference(
-                                                ProductShopUtility.ConvertTemperaturePreference(
-                                                    product.TemperaturePreference))
-                                            .SeasonalPreference(
-                                                ProductShopUtility.ConvertSeasonalPreference(
-                                                    product.SeasonalPreference))
-                                            .BodyLocation(ProductShopUtility.ConvertBodyLocation(product.BodyLocation))
-                                            .HideHair(product.HideHair)
-                                            .HideOnRide(product.HideOnRide);
-
-
-                                        foreach (var shopIngredient in product.Ingredients)
-                                        {
-                                            _bindIngredients(wearableProductBuilder.AddIngredient(_assetManagerLoader),
-                                                product, shopIngredient);
-                                        }
-
-                                        builder.AddProduct(_assetManagerLoader, wearableProductBuilder);
-                                        break;
-                                    case ProductType.CONSUMABLE:
-                                        var consumableBuilder = Parkitility
-                                            .CreateConsumableProduct<ConsumableProduct>(productGo)
-                                            .Id(product.Guid)
-                                            .DisplayName(product.Name)
-                                            .TwoHanded(product.IsTwoHanded)
-                                            .InterestingToLookAt(product.IsInterestingToLookAt)
-                                            .TemperaturePreference(
-                                                ProductShopUtility.ConvertTemperaturePreference(
-                                                    product.TemperaturePreference))
-                                            .ConsumeAnimation(
-                                                ProductShopUtility.ConvertConsumeAnimation(product.ConsumeAnimation))
-                                            .DefaultPrice(product.Price)
-                                            .Trash(TrashType.ChipBagTrash)
-                                            .HandSide(ProductShopUtility.ConvertToSide(product.HandSide));
-
-                                        foreach (var shopIngredient in product.Ingredients)
-                                        {
-                                            _bindIngredients(consumableBuilder.AddIngredient(_assetManagerLoader),
-                                                product,
-                                                shopIngredient);
-                                        }
-
-                                        builder.AddProduct(_assetManagerLoader, consumableBuilder);
-                                        break;
-                                }
-                            }
-
-                            builder.Build(_assetManagerLoader);
+                            _loadShop(asset);
                             break;
                     }
 

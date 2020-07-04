@@ -89,7 +89,7 @@ namespace PMC.ExtendedLoader
                         try
                         {
                             if (!ExtenedLoader[__instance.mod.Identifier].IsLoaded)
-                                ExtenedLoader[__instance.mod.Identifier].onEnabled();
+                                ExtenedLoader[__instance.mod.Identifier].OnEnabled();
                         }
                         catch (Exception e)
                         {
