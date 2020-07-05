@@ -170,11 +170,17 @@ namespace PMC.ExtendedLoader
                 .DisplayName(asset.Name)
                 .CustomColor(AssetPackUtilities.ConvertColors(asset.CustomColors, asset.ColorCount))
                 .BlockRain(asset.BlocksRain)
+                .HeightChangeDelta(asset.HeightDelta)
                 .SnapGridToCenter(true)
                 .OnGrid(true)
                 .GridSubdivisions(1f)
                 .Category(asset.Category, asset.SubCategory)
                 .SeeThrough(asset.SeeThrough);
+
+            if (asset.IsResizable)
+            {
+                doorBuilder.Resizable(asset.MinSize, asset.MaxSize);
+            }
 
             doorBuilder.Build(_assetManagerLoader);
         }
