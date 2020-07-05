@@ -156,6 +156,29 @@ namespace PMC.ExtendedLoader
             builder.Build(_assetManagerLoader);
         }
 
+
+        private void _loadDoor(Asset asset)
+        {
+            GameObject go = AssetPackUtilities.LoadAsset<GameObject>(_bundle, asset.Guid);
+            if (go == null)
+                throw new Exception("Can't find Object:" + asset.Guid);
+
+            WallBuilder<Door> doorBuilder = Parkitility.CreateWall<Door>(go)
+                .Id(asset.Guid)
+                .BuildLayerMask(LayerMasks.TERRAIN)
+                .Price(asset.Price, false)
+                .DisplayName(asset.Name)
+                .CustomColor(AssetPackUtilities.ConvertColors(asset.CustomColors, asset.ColorCount))
+                .BlockRain(asset.BlocksRain)
+                .SnapGridToCenter(true)
+                .OnGrid(true)
+                .GridSubdivisions(1f)
+                .Category(asset.Category, asset.SubCategory)
+                .SeeThrough(asset.SeeThrough);
+
+            doorBuilder.Build(_assetManagerLoader);
+        }
+
         public void OnEnabled()
         {
             _bundle = AssetBundle.LoadFromFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.Path),
@@ -176,6 +199,9 @@ namespace PMC.ExtendedLoader
                     {
                         case AssetType.Shop:
                             _loadShop(asset);
+                            break;
+                        case AssetType.Door:
+                            _loadDoor(asset);
                             break;
                     }
 
