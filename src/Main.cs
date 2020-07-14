@@ -31,12 +31,6 @@ namespace PMC.ExtendedLoader
         public static HashSet<string> GuidTracker = new HashSet<string>();
 
         private readonly Harmony _harmony = new Harmony("PMC.ExtendedLoader");
-        // private readonly bool _isPatched = false;
-        // public Main()
-        // {
-        //     _harmony.PatchAll();
-        // }
-
         public override void onEnabled()
         {
             _harmony.PatchAll();

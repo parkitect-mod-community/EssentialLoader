@@ -192,12 +192,15 @@ namespace PMC.ExtendedLoader
             if (_bundle == null)
                 throw new Exception("Failed to load AssetBundle!");
             var pack = AssetPackUtilities.LoadAsset(File.ReadAllText(Path));
-            Debug.Log("Loading asset pack for shop " + pack.Name + " with " + pack.Assets.Count +
-                      " assets");
 
             IsLoaded = true;
             foreach (var asset in pack.Assets)
             {
+                if (!asset.LoadAsset)
+                {
+                    continue;
+                }
+
                 try
                 {
                     Debug.Log("Loading Item " + asset.Name + " by type " + asset.TargetType);

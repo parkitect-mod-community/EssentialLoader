@@ -10,12 +10,15 @@
         "System",
         "System.Core",
         "System.Data",
+        "UnityEngine.AnimationModule",
         "UnityEngine",
         "UnityEngine.AssetBundleModule",
         "UnityEngine.CoreModule",
         "Parkitect",
         "UnityEngine.PhysicsModule",
-        "UnityEngine.JSONSerializeModule"
+        "UnityEngine.JSONSerializeModule",
+        "Unity.TextMeshPro",
+        "UnityEngine.TextCoreModule"
     ],
     "additionalAssemblies": [
         "Newtonsoft.Json",
