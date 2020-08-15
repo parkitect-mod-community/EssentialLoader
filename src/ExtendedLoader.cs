@@ -107,6 +107,12 @@ namespace PMC.ExtendedLoader
                             .HideHair(product.HideHair)
                             .HideOnRide(product.HideOnRide);
 
+                        if (product.HasCustomColors)
+                        {
+                            wearableProductBuilder.CustomColor(
+                                AssetPackUtilities.ConvertColors(product.CustomColors, product.ColorCount));
+                        }
+
 
                         foreach (var shopIngredient in product.Ingredients)
                         {
