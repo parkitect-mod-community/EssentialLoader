@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Parkitilities;
 using Parkitilities.AssetPack;
+using Parkitilities.PathStylesBuilder;
 using Parkitilities.ShopBuilder;
 using UnityEngine;
 
@@ -191,6 +192,45 @@ namespace PMC.ExtendedLoader
             doorBuilder.Build(_assetManagerLoader);
         }
 
+        private void _loadPath(Asset asset)
+        {
+            PathStyleBuilder builder = new PathStyleBuilder();
+
+            switch (asset.PathMaterialType)
+            {
+                case Asset.PathMaterial.Sheet:
+                {
+                    Texture2D sheet = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_sheet");
+                    Texture2D mask = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_mask");
+
+                    CustomColorsMaskedNormals materialBuilder = ShaderUtility.PathMaterial();
+                    if (sheet != null) materialBuilder.MainTex(sheet);
+                    materialBuilder.MaskTex(mask == null ? ShaderUtility.EmptyTexture : mask);
+                    builder.Material(materialBuilder.build())
+                        .Id(asset.Guid)
+                        .Name(asset.Name)
+                        .CustomColor(AssetPackUtilities.ConvertColors(asset.CustomColors, asset.ColorCount))
+                        .Register(asset.PathType, _assetManagerLoader, PathStyleBuilder.GetPathStyle(PathStyleBuilder.NormalPathIds.Concrete, PathStyleBuilder.PathType.Normal));
+                }
+                    break;
+                case Asset.PathMaterial.Tiled:
+                {
+                    Texture2D sheet = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_sheet");
+                    Texture2D mask = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_mask");
+
+                    CustomColorsMaskedNormals materialBuilder = ShaderUtility.PathMaterialTiled();
+                    if (sheet != null) materialBuilder.MainTex(sheet);
+                    materialBuilder.MaskTex(mask == null ? ShaderUtility.EmptyTexture : mask);
+                    builder.Material(materialBuilder.build())
+                        .Id(asset.Guid)
+                        .CustomColor(AssetPackUtilities.ConvertColors(asset.CustomColors, asset.ColorCount))
+                        .Name(asset.Name)
+                        .Register(asset.PathType, _assetManagerLoader, PathStyleBuilder.GetPathStyle(PathStyleBuilder.NormalPathIds.Concrete, PathStyleBuilder.PathType.Normal));
+                }
+                    break;
+            }
+        }
+
         public void OnEnabled()
         {
             _bundle = AssetBundle.LoadFromFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.Path),
@@ -217,6 +257,9 @@ namespace PMC.ExtendedLoader
                             break;
                         case AssetType.Door:
                             _loadDoor(asset);
+                            break;
+                        case AssetType.Path:
+                            _loadPath(asset);
                             break;
                     }
 
