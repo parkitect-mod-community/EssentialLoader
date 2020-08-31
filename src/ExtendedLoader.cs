@@ -202,30 +202,41 @@ namespace PMC.ExtendedLoader
                 {
                     Texture2D sheet = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_sheet");
                     Texture2D mask = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_mask");
+                    Texture2D normal = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_normal");
 
-                    CustomColorsMaskedNormals materialBuilder = ShaderUtility.PathMaterial();
+                    CustomColorsMaskedNormalBuilder materialBuilder = ShaderUtility.PathMaterial();
                     if (sheet != null) materialBuilder.MainTex(sheet);
+                    materialBuilder.MainTex(sheet == null ? ShaderUtility.EmptyTexture : sheet);
                     materialBuilder.MaskTex(mask == null ? ShaderUtility.EmptyTexture : mask);
+                    materialBuilder.NormalTex(normal == null ? ShaderUtility.EmptyTexture : normal);
+
                     builder.Material(materialBuilder.build())
                         .Id(asset.Guid)
                         .Name(asset.Name)
                         .CustomColor(AssetPackUtilities.ConvertColors(asset.CustomColors, asset.ColorCount))
-                        .Register(asset.PathType, _assetManagerLoader, PathStyleBuilder.GetPathStyle(PathStyleBuilder.NormalPathIds.Concrete, PathStyleBuilder.PathType.Normal));
+                        .Register(asset.PathType, _assetManagerLoader,
+                            PathStyleBuilder.GetPathStyle(PathStyleBuilder.NormalPathIds.Gravel,
+                                PathStyleBuilder.PathType.Normal));
                 }
                     break;
                 case Asset.PathMaterial.Tiled:
                 {
                     Texture2D sheet = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_sheet");
                     Texture2D mask = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_mask");
+                    Texture2D normal = AssetPackUtilities.LoadAsset<Texture2D>(_bundle, asset.Guid + ".path_normal");
 
-                    CustomColorsMaskedNormals materialBuilder = ShaderUtility.PathMaterialTiled();
+                    CustomColorMaskedCutoutBuilder materialBuilder = ShaderUtility.PathMaterialTiled();
                     if (sheet != null) materialBuilder.MainTex(sheet);
                     materialBuilder.MaskTex(mask == null ? ShaderUtility.EmptyTexture : mask);
+                    materialBuilder.MainTex(sheet == null ? ShaderUtility.EmptyTexture : sheet);
+                    materialBuilder.NormalTex(normal == null ? ShaderUtility.EmptyTexture : normal);
                     builder.Material(materialBuilder.build())
                         .Id(asset.Guid)
                         .CustomColor(AssetPackUtilities.ConvertColors(asset.CustomColors, asset.ColorCount))
                         .Name(asset.Name)
-                        .Register(asset.PathType, _assetManagerLoader, PathStyleBuilder.GetPathStyle(PathStyleBuilder.NormalPathIds.Concrete, PathStyleBuilder.PathType.Normal));
+                        .Register(asset.PathType, _assetManagerLoader,
+                            PathStyleBuilder.GetPathStyle(PathStyleBuilder.NormalPathIds.Concrete,
+                                PathStyleBuilder.PathType.Normal));
                 }
                     break;
             }
