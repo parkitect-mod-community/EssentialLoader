@@ -18,7 +18,8 @@
         "UnityEngine.PhysicsModule",
         "UnityEngine.JSONSerializeModule",
         "Unity.TextMeshPro",
-        "UnityEngine.TextCoreModule"
+        "UnityEngine.TextCoreModule",
+        "UnityEngine.ParticleSystemModule"
     ],
     "additionalAssemblies": [
         "Newtonsoft.Json",

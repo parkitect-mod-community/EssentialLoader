@@ -50,7 +50,7 @@ namespace PMC.ExtendedLoader
                 .DisplayName(asset.Name)
                 .Id(asset.Guid)
                 .Price(asset.Price)
-                .WalkableFlag(Block.WalkableFlagType.FORWARD);
+                .WalkableFlag(Asset.ConvertWalkable(asset.Walkable));
 
             foreach (var box in AssetPackUtilities.ConvertBoundingBox(asset.BoundingBoxes.ToArray()))
             {
@@ -88,6 +88,34 @@ namespace PMC.ExtendedLoader
                         }
 
                         builder.AddProduct(_assetManagerLoader, ongoingProductBuilder);
+                        break;
+                    case ProductType.BALLOON:
+                        Debug.Log(product.Name);
+                        var balloonBuilder = Parkitility
+                            .CreateBalloonProduct<Balloon>(productGo)
+                            .Id(product.Guid)
+                            .DisplayName(product.Name)
+                            .DestroyWhenDepleted(false)
+                            .Duration(180)
+                            .DefaultPrice(product.Price)
+                            .DefaultMass(product.DefaultMass)
+                            .DefaultDrag(product.DefaultDrag)
+                            .DefaultAngularDrag(product.DefaultAngularDrag)
+                            .RemoveFromInventoryWhenDepleted(true);
+
+                        if (product.HasCustomColors)
+                        {
+                            balloonBuilder.CustomColor(
+                                AssetPackUtilities.ConvertColors(product.CustomColors, product.ColorCount));
+                        }
+
+                        foreach (var shopIngredient in product.Ingredients)
+                        {
+                            _bindIngredients(balloonBuilder.AddIngredient(_assetManagerLoader),
+                                product, shopIngredient);
+                        }
+
+                        builder.AddProduct(_assetManagerLoader, balloonBuilder);
                         break;
                     case ProductType.WEARABLE:
                         var wearableProductBuilder = Parkitility
