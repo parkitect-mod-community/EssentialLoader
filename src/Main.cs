@@ -54,10 +54,10 @@ namespace PMC.ExtendedLoader
             {
 
 
-                Debug.Log("Extended loader/ Disabling:" + __instance.mod.Identifier);
+                Debug.Log("Extended loader/ Disabling:" + __instance.mod.getIdentifier());
 
-                if (ExtenedLoader.ContainsKey(__instance.mod.Identifier) && ExtenedLoader[__instance.mod.Identifier].IsLoaded)
-                    ExtenedLoader[__instance.mod.Identifier].onDisabled();
+                if (ExtenedLoader.ContainsKey(__instance.mod.getIdentifier()) && ExtenedLoader[__instance.mod.getIdentifier()].IsLoaded)
+                    ExtenedLoader[__instance.mod.getIdentifier()].onDisabled();
             }
 
             [HarmonyPostfix]
@@ -66,24 +66,24 @@ namespace PMC.ExtendedLoader
             {
                 if (!(GameController.Instance != null && GameController.Instance.isCampaignScenario)  && __result)
                 {
-                    if (!ExtenedLoader.ContainsKey(__instance.mod.Identifier))
+                    if (!ExtenedLoader.ContainsKey(__instance.mod.getIdentifier()))
                     {
                         string[] files = Directory.GetFiles(__instance.path, "*.assetProject",
                             SearchOption.TopDirectoryOnly);
                         if (files.Length != 0)
                         {
                             ExtendedLoader loader = new ExtendedLoader(files[0]);
-                            ExtenedLoader.Add(__instance.mod.Identifier, loader);
+                            ExtenedLoader.Add(__instance.mod.getIdentifier(), loader);
                         }
                     }
 
-                    Debug.Log("Extended loader/ Loading:" + __instance.mod.Identifier);
-                    if (ExtenedLoader.ContainsKey(__instance.mod.Identifier))
+                    Debug.Log("Extended loader/ Loading:" + __instance.mod.getIdentifier());
+                    if (ExtenedLoader.ContainsKey(__instance.mod.getIdentifier()))
                     {
                         try
                         {
-                            if (!ExtenedLoader[__instance.mod.Identifier].IsLoaded)
-                                ExtenedLoader[__instance.mod.Identifier].OnEnabled();
+                            if (!ExtenedLoader[__instance.mod.getIdentifier()].IsLoaded)
+                                ExtenedLoader[__instance.mod.getIdentifier()].OnEnabled();
                         }
                         catch (Exception e)
                         {
